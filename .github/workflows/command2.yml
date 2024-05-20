@@ -73,8 +73,9 @@ jobs:
       - name: Test timeout
         timeout-minutes: 1
         run: |
-          timeout 50 sudo -E sleep 52s || code=$?; if [[ $code -ne 124 && $code -ne 0 ]]; then echo test failed; exit $code; fi
-        
+          echo start
+          timeout 50 sudo -E sleep 55s || code=$?; echo exit code is $code; if [[ $code -eq 124 ]]; then echo test timeout with $code; exit 0; else echo test failed with $code; exit $code; fi
+          echo end
       - name: Build
         uses: ./.github/actions/build
         with: 
