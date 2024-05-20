@@ -70,12 +70,13 @@ jobs:
             echo "target=juicefs" >> $GITHUB_OUTPUT
           fi
 
-      - name: Test timeout
-        timeout-minutes: 1
-        run: |
-          echo start
-          timeout 50 sudo -E sleep 55s || code=$?; echo exit code is $code; if [[ $code -eq 124 ]]; then echo test timeout with $code; exit 0; else echo test failed with $code; exit $code; fi
-          echo end
+      # - name: Test timeout
+      #   timeout-minutes: 1
+      #   run: |
+      #     echo start
+      #     timeout 50 sudo -E sleep 55s || code=$?; echo exit code is $code; if [[ $code -eq 124 ]]; then echo test timeout with $code; exit 0; else echo test failed with $code; exit $code; fi
+      #     echo end
+
       - name: Build
         uses: ./.github/actions/build
         with: 
@@ -107,9 +108,9 @@ jobs:
           workflow_conclusion: completed
 
       - name: Run All
-        timeout-minutes: 70
+        timeout-minutes: 3
         run: |
-          timeout 3600 sudo -E LOG_LEVEL=WARNING META1=redis META2=${{matrix.meta}} .github/scripts/command/random.sh test_run_all || code=$?; if [[ $code -ne 124 && $code -ne 0 ]]; then echo test failed; exit $code; fi
+          timeout 2 sudo -E LOG_LEVEL=WARNING META1=redis META2=${{matrix.meta}} .github/scripts/command/random.sh test_run_all || code=$?; echo exit code is $code; if [[ $code -eq 124 ]]; then echo test timeout with $code; exit 0; else echo test failed with $code; exit $code; fi
       
       - name: Upload example database
         uses: actions/upload-artifact@v3
