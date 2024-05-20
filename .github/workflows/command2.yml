@@ -70,6 +70,11 @@ jobs:
             echo "target=juicefs" >> $GITHUB_OUTPUT
           fi
 
+      - name: Test timeout
+        timeout-minutes: 1
+        run: |
+          timeout 50 sudo -E sleep 52s || code=$?; if [[ $code -ne 124 && $code -ne 0 ]]; then echo test failed; exit $code; fi
+        
       - name: Build
         uses: ./.github/actions/build
         with: 
