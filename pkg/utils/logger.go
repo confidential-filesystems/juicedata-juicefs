@@ -143,3 +143,11 @@ func SetOutput(w io.Writer) {
 		logger.SetOutput(w)
 	}
 }
+
+func SetLogExitFunc(f func(i int)) {
+	mu.Lock()
+	defer mu.Unlock()
+	for _, logger := range loggers {
+		logger.ExitFunc = f
+	}
+}

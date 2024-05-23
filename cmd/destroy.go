@@ -55,6 +55,11 @@ Details: https://juicefs.com/docs/community/administration/destroy`,
 				Name:  "force",
 				Usage: "skip sanity check and force destroy the volume",
 			},
+			// 2024-03-28: confilesystem add for cfs
+			&cli.StringFlag{
+				Name:  "encrypt-root-key",
+				Usage: "a path to filesystem encrypt root key (RSA: PEM, AES: Rand Key)",
+			},
 		},
 	}
 }
@@ -121,6 +126,13 @@ func destroy(ctx *cli.Context) error {
 	if err != nil {
 		logger.Fatalf("load setting: %s", err)
 	}
+	// 2024-03-28: confilesystem add for cfs
+	encryptRootKey := ctx.String("encrypt-root-key")
+	if encryptRootKey == "" {
+		err = fmt.Errorf("destroy: Get encryptRootKey = [%v] from flag encrypt-root-key", encryptRootKey)
+		return err
+	}
+	format.EncryptKey = loadEncrypt(encryptRootKey)
 	if uuid := ctx.Args().Get(1); uuid != format.UUID {
 		logger.Fatalf("UUID %s != expected %s", uuid, format.UUID)
 	}

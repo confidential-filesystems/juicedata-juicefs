@@ -80,7 +80,16 @@ $ juicefs mount redis://localhost /mnt/jfs -d --read-only
 
 # Disable metadata backup
 $ juicefs mount redis://localhost /mnt/jfs --backup-meta 0`,
-		Flags: expandFlags(mount_flags(), clientFlags(1.0), shareInfoFlags()),
+		Flags: expandFlags(
+			mount_flags(),
+			clientFlags(1.0),
+			shareInfoFlags(),
+			[]cli.Flag{
+				&cli.StringFlag{
+					Name:  "encrypt-root-key",
+					Usage: "a path to filesystem encrypt root key (RSA: PEM, AES: Rand Key)",
+				},
+			}),
 	}
 }
 
@@ -591,6 +600,13 @@ func mount(c *cli.Context) error {
 	if err != nil {
 		return err
 	}
+	// 2024-03-28: confilesystem add for cfs
+	encryptRootKey := c.String("encrypt-root-key")
+	if encryptRootKey == "" {
+		err = fmt.Errorf("mount: Get encryptRootKey = [%v] from flag encrypt-root-key", encryptRootKey)
+		return err
+	}
+	format.EncryptKey = loadEncrypt(encryptRootKey)
 	if st := metaCli.Chroot(meta.Background, metaConf.Subdir); st != 0 {
 		return st
 	}

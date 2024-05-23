@@ -124,7 +124,7 @@ func newRedisMeta(driver, addr string, conf *Config) (Meta, error) {
 		return nil, fmt.Errorf("redis parse %s: %s", uri, err)
 	}
 	if opt.TLSConfig != nil {
-		opt.TLSConfig.ServerName = "" // use the host of each connection as ServerName
+		opt.TLSConfig.ServerName = "metadata-engine" // use the host of each connection as ServerName
 		opt.TLSConfig.InsecureSkipVerify = skipVerify != ""
 		if certFile != "" {
 			cert, err := tls.LoadX509KeyPair(certFile, keyFile)

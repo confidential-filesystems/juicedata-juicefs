@@ -18,8 +18,6 @@ package cmd
 
 import (
 	"bytes"
-	"crypto/x509"
-	"encoding/pem"
 	"fmt"
 	"io"
 	"math/rand"
@@ -154,13 +152,13 @@ func formatFlags() []cli.Flag {
 			Usage: "compression algorithm (lz4, zstd, none)",
 		},
 		&cli.StringFlag{
-			Name:  "encrypt-rsa-key",
-			Usage: "a path to RSA private key (PEM)",
+			Name:  "encrypt-root-key",
+			Usage: "a path to filesystem encrypt root key (RSA: PEM, AES: Rand Key)",
 		},
 		&cli.StringFlag{
 			Name:  "encrypt-algo",
-			Usage: "encrypt algorithm (aes256gcm-rsa, chacha20-rsa)",
-			Value: object.AES256GCM_RSA,
+			Usage: "encrypt algorithm (aes256gcm-aesgcm, aes256gcm-rsa, chacha20-rsa)",
+			Value: object.AES256GCM_AESGCM,
 		},
 		&cli.BoolFlag{
 			Name:  "hash-prefix",
@@ -247,26 +245,17 @@ func createStorage(format meta.Format) (object.ObjectStorage, error) {
 			os.SetStorageClass(format.StorageClass)
 		}
 	}
-	if format.EncryptKey != "" {
-		passphrase := os.Getenv("JFS_RSA_PASSPHRASE")
-		if passphrase == "" {
-			block, _ := pem.Decode([]byte(format.EncryptKey))
-			// nolint:staticcheck
-			if block != nil && strings.Contains(block.Headers["Proc-Type"], "ENCRYPTED") && x509.IsEncryptedPEMBlock(block) {
-				return nil, fmt.Errorf("passphrase is required to private key, please try again after setting the 'JFS_RSA_PASSPHRASE' environment variable")
-			}
+	if format.EncryptKey == "" {
+		return nil, fmt.Errorf("EncryptKey is nil")
 		}
 
-		privKey, err := object.ParseRsaPrivateKeyFromPem([]byte(format.EncryptKey), []byte(passphrase))
-		if err != nil {
-			return nil, fmt.Errorf("parse rsa: %s", err)
-		}
-		encryptor, err := object.NewDataEncryptor(object.NewRSAEncryptor(privKey), format.EncryptAlgo)
+	passphrase := os.Getenv("JFS_RSA_PASSPHRASE")
+
+	encryptor, err := object.NewDataEncryptor(([]byte)(format.EncryptKey), passphrase, format.EncryptAlgo)
 		if err != nil {
 			return nil, err
 		}
 		blob = object.NewEncrypted(blob, encryptor)
-	}
 	return blob, nil
 }
 
@@ -375,6 +364,7 @@ func format(c *cli.Context) error {
 			return nil
 		}
 		format.Name = name
+		format.EncryptKey = loadEncrypt(c.String("encrypt-root-key"))
 		for _, flag := range c.LocalFlagNames() {
 			switch flag {
 			case "capacity":
@@ -409,8 +399,11 @@ func format(c *cli.Context) error {
 				format.HashPrefix = c.Bool(flag)
 			case "storage":
 				format.Storage = c.String(flag)
-			case "encrypt-rsa-key", "encrypt-algo":
-				logger.Warnf("Flag %s is ignored since it cannot be updated", flag)
+			case "encrypt-algo":
+				encryptAlgo := c.String("encrypt-algo")
+				if 0 != strings.Compare(encryptAlgo, format.EncryptAlgo) {
+					logger.Fatalf("encrypt-algo: %s != format.EncryptAlgo: %s", encryptAlgo, format.EncryptAlgo)
+				}
 			}
 		}
 	} else if strings.HasPrefix(err.Error(), "database is not formatted") {
@@ -424,7 +417,7 @@ func format(c *cli.Context) error {
 			AccessKey:        c.String("access-key"),
 			SecretKey:        c.String("secret-key"),
 			SessionToken:     c.String("session-token"),
-			EncryptKey:       loadEncrypt(c.String("encrypt-rsa-key")),
+			EncryptKey:       loadEncrypt(c.String("encrypt-root-key")),
 			EncryptAlgo:      c.String("encrypt-algo"),
 			Shards:           c.Int("shards"),
 			HashPrefix:       c.Bool("hash-prefix"),
@@ -488,7 +481,7 @@ func format(c *cli.Context) error {
 			} else {
 				logger.Warnf("List storage %s failed: %s", blob, err)
 			}
-			if err = blob.Put("juicefs_uuid", strings.NewReader(format.UUID)); err != nil {
+			if err = blob.Put("uuid", strings.NewReader(format.UUID)); err != nil {
 				logger.Warnf("Put uuid object: %s", err)
 			}
 		}
@@ -501,7 +494,7 @@ func format(c *cli.Context) error {
 	}
 	if err = m.Init(format, c.Bool("force")); err != nil {
 		if create {
-			_ = blob.Delete("juicefs_uuid")
+			_ = blob.Delete("uuid")
 		}
 		logger.Fatalf("format: %s", err)
 	}

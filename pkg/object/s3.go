@@ -148,6 +148,7 @@ func (s *s3client) Get(key string, off, limit int64) (io.ReadCloser, error) {
 }
 
 func (s *s3client) Put(key string, in io.Reader) error {
+	//logger.Infof("s3client.Put(): s.bucket = %v, key = %v", s.bucket, key)
 	var body io.ReadSeeker
 	if b, ok := in.(io.ReadSeeker); ok {
 		body = b

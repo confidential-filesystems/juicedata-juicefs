@@ -35,11 +35,120 @@ import (
 	"golang.org/x/crypto/chacha20poly1305"
 )
 
+// 2024-03-28: confilesystem modify for cfs
+// public
 type Encryptor interface {
-	Encrypt(plaintext []byte) ([]byte, error)
-	Decrypt(ciphertext []byte) ([]byte, error)
+	Encrypt(prefix string, nonce []byte, plaintext []byte) ([]byte, error)
+	Decrypt(prefix string, nonce []byte, ciphertext []byte) ([]byte, error)
 }
 
+type encrypted struct {
+	ObjectStorage
+	enc Encryptor
+}
+
+// NewEncrypted returns a encrypted object storage
+func NewEncrypted(o ObjectStorage, enc Encryptor) ObjectStorage {
+	return &encrypted{o, enc}
+}
+
+func (e *encrypted) String() string {
+	return fmt.Sprintf("%s(encrypted)", e.ObjectStorage)
+}
+
+func (e *encrypted) Get(key string, off, limit int64) (io.ReadCloser, error) {
+	//logger.Infof("Get(): key = %v", key)
+	r, err := e.ObjectStorage.Get(key, 0, -1)
+	if err != nil {
+		return nil, err
+	}
+	defer r.Close()
+	ciphertext, err := io.ReadAll(r)
+	if err != nil {
+		return nil, err
+	}
+	plain, err := e.enc.Decrypt(key, nil, ciphertext)
+	if err != nil {
+		return nil, fmt.Errorf("Decrypt: %s", err)
+	}
+	l := int64(len(plain))
+	if off > l {
+		off = l
+	}
+	if limit == -1 || off+limit > l {
+		limit = l - off
+	}
+	data := plain[off : off+limit]
+	return io.NopCloser(bytes.NewBuffer(data)), nil
+}
+
+func (e *encrypted) Put(key string, in io.Reader) error {
+	//logger.Infof("encrypted.Put(): 1- key = %v", key)
+	plain, err := io.ReadAll(in)
+	if err != nil {
+		return err
+	}
+	ciphertext, err := e.enc.Encrypt(key, nil, plain)
+	if err != nil {
+		return err
+	}
+	//logger.Infof("encrypted.Put(): 2- key = %v", key)
+	return e.ObjectStorage.Put(key, bytes.NewReader(ciphertext))
+}
+
+var _ ObjectStorage = &encrypted{}
+
+const (
+	AES256GCM_RSA    = "aes256gcm-rsa"
+	CHACHA20_RSA     = "chacha20-rsa"
+	AES256GCM_AESGCM = "aes256gcm-aesgcm"
+)
+
+func NewDataEncryptor(encryptKey []byte, passphrase string, algo string) (Encryptor, error) {
+	switch algo {
+	case AES256GCM_RSA, CHACHA20_RSA:
+		if passphrase == "" {
+			block, _ := pem.Decode(encryptKey)
+			// nolint:staticcheck
+			if block != nil && strings.Contains(block.Headers["Proc-Type"], "ENCRYPTED") && x509.IsEncryptedPEMBlock(block) {
+				return nil, fmt.Errorf("passphrase is required to private key, please try again after setting the 'JFS_RSA_PASSPHRASE' environment variable")
+			}
+		}
+
+		privKey, err := ParseRsaPrivateKeyFromPem(encryptKey, []byte(passphrase))
+		if err != nil {
+			return nil, fmt.Errorf("parse rsa: %s", err)
+		}
+
+		keyEncryptor := NewRSAEncryptor(privKey)
+		switch algo {
+		case "", AES256GCM_RSA:
+			aead := func(key []byte) (cipher.AEAD, error) {
+				block, err := aes.NewCipher(key)
+				if err != nil {
+					return nil, err
+				}
+				return cipher.NewGCM(block)
+			}
+			return &rsaDataEncryptor{keyEncryptor, 32, aead}, nil
+		case CHACHA20_RSA:
+			return &rsaDataEncryptor{keyEncryptor, chacha20poly1305.KeySize, chacha20poly1305.New}, nil
+		}
+	case "", AES256GCM_AESGCM:
+		aead := func(key []byte) (cipher.AEAD, error) {
+			block, err := aes.NewCipher(key)
+			if err != nil {
+				return nil, err
+			}
+			return cipher.NewGCM(block)
+		}
+		keyEncryptor := NewAESGCMEncryptor(encryptKey, aead)
+		return &aesgcmDataEncryptor{keyEncryptor, 32, aead}, nil
+	}
+	return nil, fmt.Errorf("unsupport cipher: %s", algo)
+}
+
+// RSA
 type rsaEncryptor struct {
 	privKey *rsa.PrivateKey
 	label   []byte
@@ -125,57 +234,36 @@ func NewRSAEncryptor(privKey *rsa.PrivateKey) Encryptor {
 	return &rsaEncryptor{privKey, []byte("keys")}
 }
 
-func (e *rsaEncryptor) Encrypt(plaintext []byte) ([]byte, error) {
+// 2024-03-28: confilesystem modify for cfs
+func (e *rsaEncryptor) Encrypt(prefix string, nonce []byte, plaintext []byte) ([]byte, error) {
 	return rsa.EncryptOAEP(sha256.New(), rand.Reader, &e.privKey.PublicKey, plaintext, e.label)
 }
 
-func (e *rsaEncryptor) Decrypt(ciphertext []byte) ([]byte, error) {
+func (e *rsaEncryptor) Decrypt(prefix string, nonce []byte, ciphertext []byte) ([]byte, error) {
 	return rsa.DecryptOAEP(sha256.New(), rand.Reader, e.privKey, ciphertext, e.label)
 }
 
-type dataEncryptor struct {
+type rsaDataEncryptor struct {
 	keyEncryptor Encryptor
 	keyLen       int
 	aead         func(key []byte) (cipher.AEAD, error)
 }
 
-const (
-	AES256GCM_RSA = "aes256gcm-rsa"
-	CHACHA20_RSA  = "chacha20-rsa"
-)
-
-func NewDataEncryptor(keyEncryptor Encryptor, algo string) (Encryptor, error) {
-	switch algo {
-	case "", AES256GCM_RSA:
-		aead := func(key []byte) (cipher.AEAD, error) {
-			block, err := aes.NewCipher(key)
-			if err != nil {
-				return nil, err
-			}
-			return cipher.NewGCM(block)
-		}
-		return &dataEncryptor{keyEncryptor, 32, aead}, nil
-	case CHACHA20_RSA:
-		return &dataEncryptor{keyEncryptor, chacha20poly1305.KeySize, chacha20poly1305.New}, nil
-	}
-	return nil, fmt.Errorf("unsupport cipher: %s", algo)
-}
-
-func (e *dataEncryptor) Encrypt(plaintext []byte) ([]byte, error) {
+func (e *rsaDataEncryptor) Encrypt(prefix string, nonce []byte, plaintext []byte) ([]byte, error) {
 	key := make([]byte, e.keyLen)
 	if _, err := io.ReadFull(rand.Reader, key); err != nil {
-		return nil, err
-	}
-	cipherkey, err := e.keyEncryptor.Encrypt(key)
-	if err != nil {
 		return nil, err
 	}
 	aead, err := e.aead(key)
 	if err != nil {
 		return nil, err
 	}
-	nonce := make([]byte, aead.NonceSize())
+	nonce = make([]byte, aead.NonceSize())
 	if _, err := io.ReadFull(rand.Reader, nonce); err != nil {
+		return nil, err
+	}
+	cipherkey, err := e.keyEncryptor.Encrypt(prefix, nonce, key)
+	if err != nil {
 		return nil, err
 	}
 
@@ -193,7 +281,7 @@ func (e *dataEncryptor) Encrypt(plaintext []byte) ([]byte, error) {
 	return buf[:headerSize+len(ciphertext)], nil
 }
 
-func (e *dataEncryptor) Decrypt(ciphertext []byte) ([]byte, error) {
+func (e *rsaDataEncryptor) Decrypt(prefix string, nonce []byte, ciphertext []byte) ([]byte, error) {
 	keyLen := int(ciphertext[0])<<8 + int(ciphertext[1])
 	nonceLen := int(ciphertext[2])
 	if 3+keyLen+nonceLen >= len(ciphertext) {
@@ -201,10 +289,10 @@ func (e *dataEncryptor) Decrypt(ciphertext []byte) ([]byte, error) {
 	}
 	ciphertext = ciphertext[3:]
 	cipherkey := ciphertext[:keyLen]
-	nonce := ciphertext[keyLen : keyLen+nonceLen]
+	nonce = ciphertext[keyLen : keyLen+nonceLen]
 	ciphertext = ciphertext[keyLen+nonceLen:]
 
-	key, err := e.keyEncryptor.Decrypt(cipherkey)
+	key, err := e.keyEncryptor.Decrypt(prefix, nonce, cipherkey)
 	if err != nil {
 		return nil, errors.New("decryt key: " + err.Error())
 	}
@@ -214,56 +302,3 @@ func (e *dataEncryptor) Decrypt(ciphertext []byte) ([]byte, error) {
 	}
 	return aead.Open(ciphertext[:0], nonce, ciphertext, nil)
 }
-
-type encrypted struct {
-	ObjectStorage
-	enc Encryptor
-}
-
-// NewEncrypted returns a encrypted object storage
-func NewEncrypted(o ObjectStorage, enc Encryptor) ObjectStorage {
-	return &encrypted{o, enc}
-}
-
-func (e *encrypted) String() string {
-	return fmt.Sprintf("%s(encrypted)", e.ObjectStorage)
-}
-
-func (e *encrypted) Get(key string, off, limit int64) (io.ReadCloser, error) {
-	r, err := e.ObjectStorage.Get(key, 0, -1)
-	if err != nil {
-		return nil, err
-	}
-	defer r.Close()
-	ciphertext, err := io.ReadAll(r)
-	if err != nil {
-		return nil, err
-	}
-	plain, err := e.enc.Decrypt(ciphertext)
-	if err != nil {
-		return nil, fmt.Errorf("Decrypt: %s", err)
-	}
-	l := int64(len(plain))
-	if off > l {
-		off = l
-	}
-	if limit == -1 || off+limit > l {
-		limit = l - off
-	}
-	data := plain[off : off+limit]
-	return io.NopCloser(bytes.NewBuffer(data)), nil
-}
-
-func (e *encrypted) Put(key string, in io.Reader) error {
-	plain, err := io.ReadAll(in)
-	if err != nil {
-		return err
-	}
-	ciphertext, err := e.enc.Encrypt(plain)
-	if err != nil {
-		return err
-	}
-	return e.ObjectStorage.Put(key, bytes.NewReader(ciphertext))
-}
-
-var _ ObjectStorage = &encrypted{}

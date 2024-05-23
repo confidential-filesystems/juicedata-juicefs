@@ -49,6 +49,11 @@ func cmdWebDav() *cli.Command {
 			Name:  "access-log",
 			Usage: "path for JuiceFS access log",
 		},
+		// 2024-04-08: confilesystem add for cfs
+		&cli.StringFlag{
+			Name:  "encrypt-root-key",
+			Usage: "a path to filesystem encrypt root key (RSA: PEM, AES: Rand Key)",
+		},
 	}
 
 	return &cli.Command{

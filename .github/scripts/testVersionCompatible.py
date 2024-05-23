@@ -77,7 +77,7 @@ class JuicefsMachine(RuleBasedStateMachine):
           shards=st.integers(min_value=0, max_value=1),
           storage=st.just(STORAGE), 
           encrypt_rsa_key = st.booleans(), 
-          encrypt_algo = st.sampled_from(['aes256gcm-rsa','chacha20-rsa']),
+          encrypt_algo = st.sampled_from(['aes256gcm-aesgcm', 'aes256gcm-rsa','chacha20-rsa']),
           trash_days=st.integers(min_value=0, max_value=10000), 
           hash_prefix=st.booleans(), 
           force = st.booleans(), 
@@ -107,7 +107,7 @@ class JuicefsMachine(RuleBasedStateMachine):
             if not os.path.exists('my-priv-key.pem'):
                 subprocess.check_call('openssl genrsa -out my-priv-key.pem -aes256  -passout pass:12345678 2048'.split())
             os.environ['JFS_RSA_PASSPHRASE'] = '12345678'
-            options.extend(['--encrypt-rsa-key', 'my-priv-key.pem'])
+            options.extend(['--encrypt-root-key', 'my-priv-key.pem'])
             if run_cmd(f'{juicefs} format --help | grep encrypt-algo') == 0:
                 options.extend(['--encrypt-algo', encrypt_algo])
         

@@ -95,13 +95,13 @@ func GenerateRsaKeyPair() *rsa.PrivateKey {
 
 func TestRSA(t *testing.T) {
 	c1 := NewRSAEncryptor(testkey)
-	ciphertext, _ := c1.Encrypt([]byte("hello"))
+	ciphertext, _ := c1.Encrypt("", []byte("nonce"), []byte("hello"))
 
 	privPEM := ExportRsaPrivateKeyToPem(testkey, "abc")
 
 	key2, _ := ParseRsaPrivateKeyFromPem([]byte(privPEM), []byte("abc"))
 	c2 := NewRSAEncryptor(key2)
-	plaintext, _ := c2.Decrypt(ciphertext)
+	plaintext, _ := c2.Decrypt("", []byte("nonce"), ciphertext)
 	if string(plaintext) != "hello" {
 		t.Fail()
 	}
@@ -165,26 +165,26 @@ func BenchmarkRSA4096Encrypt(b *testing.B) {
 	kc := NewRSAEncryptor(testkey)
 	b.ResetTimer()
 	for n := 0; n < b.N; n++ {
-		_, _ = kc.Encrypt(secret)
+		_, _ = kc.Encrypt("", []byte("nonce"), secret)
 	}
 }
 
 func BenchmarkRSA4096Decrypt(b *testing.B) {
 	secret := make([]byte, 32)
 	kc := NewRSAEncryptor(testkey)
-	ciphertext, _ := kc.Encrypt(secret)
+	ciphertext, _ := kc.Encrypt("", []byte("nonce"), secret)
 	b.ResetTimer()
 	for n := 0; n < b.N; n++ {
-		_, _ = kc.Decrypt(ciphertext)
+		_, _ = kc.Decrypt("", []byte("nonce"), ciphertext)
 	}
 }
 
 func TestChaCha20(t *testing.T) {
-	kc := NewRSAEncryptor(testkey)
-	dc, _ := NewDataEncryptor(kc, CHACHA20_RSA)
+	//kc := NewRSAEncryptor(testkey)
+	dc, _ := NewDataEncryptor([]byte("key"), "pwd", CHACHA20_RSA)
 	data := []byte("hello")
-	ciphertext, _ := dc.Encrypt(data)
-	plaintext, _ := dc.Decrypt(ciphertext)
+	ciphertext, _ := dc.Encrypt("", []byte("nonce"), data)
+	plaintext, _ := dc.Decrypt("", []byte("nonce"), ciphertext)
 	if !bytes.Equal(data, plaintext) {
 		t.Errorf("decrypt fail")
 		t.Fail()
@@ -192,11 +192,11 @@ func TestChaCha20(t *testing.T) {
 }
 
 func TestAESGCM(t *testing.T) {
-	kc := NewRSAEncryptor(testkey)
-	dc, _ := NewDataEncryptor(kc, AES256GCM_RSA)
+	//kc := NewRSAEncryptor(testkey)
+	dc, _ := NewDataEncryptor([]byte("key"), "pwd", AES256GCM_RSA)
 	data := []byte("hello")
-	ciphertext, _ := dc.Encrypt(data)
-	plaintext, _ := dc.Decrypt(ciphertext)
+	ciphertext, _ := dc.Encrypt("", []byte("nonce"), data)
+	plaintext, _ := dc.Decrypt("", []byte("nonce"), ciphertext)
 	if !bytes.Equal(data, plaintext) {
 		t.Errorf("decrypt fail")
 		t.Fail()
@@ -205,8 +205,8 @@ func TestAESGCM(t *testing.T) {
 
 func TestEncryptedStore(t *testing.T) {
 	s, _ := CreateStorage("mem", "", "", "", "")
-	kc := NewRSAEncryptor(testkey)
-	dc, _ := NewDataEncryptor(kc, AES256GCM_RSA)
+	//kc := NewRSAEncryptor(testkey)
+	dc, _ := NewDataEncryptor([]byte("key"), "pwd", AES256GCM_RSA)
 	es := NewEncrypted(s, dc)
 	_ = es.Put("a", bytes.NewReader([]byte("hello")))
 	r, err := es.Get("a", 1, 2)

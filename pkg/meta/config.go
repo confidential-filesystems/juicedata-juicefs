@@ -49,7 +49,14 @@ type Config struct {
 }
 
 func DefaultConf() *Config {
-	return &Config{Strict: true, Retries: 10, MaxDeletes: 2, Heartbeat: 12 * time.Second, AtimeMode: NoAtime, DirStatFlushPeriod: 1 * time.Second}
+	return &Config{
+		Strict:             true,
+		Retries:            10,
+		MaxDeletes:         2,
+		Heartbeat:          12 * time.Second,
+		AtimeMode:          NoAtime,
+		DirStatFlushPeriod: 1 * time.Second,
+	}
 }
 
 func (c *Config) SelfCheck() {
@@ -166,11 +173,12 @@ func (f *Format) CheckVersion() error {
 	return nil
 }
 
+// 2024-03-28 : confilesystem modify to use fsrk to encrypt the secrets...
 func (f *Format) Encrypt() error {
 	if f.KeyEncrypted || f.SecretKey == "" && f.EncryptKey == "" && f.SessionToken == "" {
 		return nil
 	}
-	key := md5.Sum([]byte(f.UUID))
+	key := md5.Sum([]byte(f.EncryptKey))
 	block, err := aes.NewCipher(key[:])
 	if err != nil {
 		return fmt.Errorf("new cipher: %s", err)
@@ -196,7 +204,9 @@ func (f *Format) Encrypt() error {
 
 	encrypt(&f.SecretKey)
 	encrypt(&f.SessionToken)
-	encrypt(&f.EncryptKey)
+	// 2024-03-28: confilesystem modify for cfs
+	//encrypt(&f.EncryptKey)
+	f.EncryptKey = ""
 	f.KeyEncrypted = true
 	return nil
 }
@@ -205,7 +215,7 @@ func (f *Format) Decrypt() error {
 	if !f.KeyEncrypted {
 		return nil
 	}
-	key := md5.Sum([]byte(f.UUID))
+	key := md5.Sum([]byte(f.EncryptKey))
 	block, err := aes.NewCipher(key[:])
 	if err != nil {
 		return fmt.Errorf("new cipher: %s", err)
@@ -235,7 +245,8 @@ func (f *Format) Decrypt() error {
 		*k = string(plaintext)
 	}
 
-	decrypt(&f.EncryptKey)
+	// 2024-03-28: confilesystem modify for cfs
+	//decrypt(&f.EncryptKey)
 	decrypt(&f.SecretKey)
 	decrypt(&f.SessionToken)
 	f.KeyEncrypted = false

@@ -168,8 +168,8 @@ juicefs format sqlite3://myjfs.db myjfs --trash-days=0
 |-|-|
 |`--block-size=4096`|size of block in KiB (default: 4096). 4M is usually a better default value because many object storage services use 4M as their internal block size, thus using the same block size in JuiceFS usually yields better performance.|
 |`--compress=none`|compression algorithm, choose from `lz4`, `zstd`, `none` (default). Enabling compression will inevitably affect performance, choose wisely.|
-|`--encrypt-rsa-key=value`|A path to RSA private key (PEM)|
-|`--encrypt-algo=aes256gcm-rsa`|encrypt algorithm (aes256gcm-rsa, chacha20-rsa) (default: "aes256gcm-rsa")|
+|`--encrypt-root-key=value`|A path to RSA private key (PEM)|
+|`--encrypt-algo=aes256gcm-aesgcm`|encrypt algorithm (aes256gcm-aesgcm, aes256gcm-rsa, chacha20-rsa) (default: "aes256gcm-rsa")|
 |`--hash-prefix`|add a hash prefix to name of objects (default: false)|
 |`--shards=0`|If your object storage limit speed in a bucket level (or you're using a self-hosted object storage with limited performance), you can store the blocks into N buckets by hash of key (default: 0), when N is greater than 0, `bucket` should to be in the form of `%d`, e.g. `--bucket "juicefs-%d"`. `--shards` cannot be changed afterwards and must be planned carefully ahead.|
 
@@ -403,8 +403,8 @@ juicefs load redis://127.0.0.1:6379/1 meta-dump.json
 |-|-|
 |`META-URL`|Database URL for metadata storage, see [JuiceFS supported metadata engines](../reference/how_to_set_up_metadata_engine.md) for details.|
 |`FILE`|Import file path, if not specified, it will be imported from standard input. If the filename ends with `.gz`, it will be automatically decompressed.|
-|`--encrypt-rsa-key=path` <VersionAdd>1.0.4</VersionAdd> |The path to the RSA private key file used for encryption.|
-|`--encrypt-alg=aes256gcm-rsa` <VersionAdd>1.0.4</VersionAdd> |Encryption algorithm, the default is `aes256gcm-rsa`.|
+|`--encrypt-root-key=path` <VersionAdd>1.0.4</VersionAdd> |The path to the RSA private key file used for encryption.|
+|`--encrypt-alg=aes256gcm-aesgcm` <VersionAdd>1.0.4</VersionAdd> |Encryption algorithm, the default is `aes256gcm-rsa`.|
 
 ## Inspector {#inspector}
 

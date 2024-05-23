@@ -122,7 +122,7 @@ For an encrypted file system, it is necessary to additionally set the `JFS_RSA_P
 ```shell
 export JFS_RSA_PASSPHRASE=xxxxxx
 juicefs load \
-  --encrypt-rsa-key my-private.pem \
+  --encrypt-root-key my-private.pem \
   --encrypt-algo aes256gcm-rsa \
   redis://192.168.1.6:6379/1 \
   dump-2023-03-16-090750.json.gz

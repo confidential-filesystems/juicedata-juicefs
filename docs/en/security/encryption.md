@@ -103,7 +103,7 @@ The security of RSA private key is crucial when Data Encryption At Rest encrypti
 
 #### Step 2: create an encrypted file system
 
-The option `--encrypt-rsa-key` is required to specify RSA private key when creating an encrypted file system. The provided private key content will be written to the metadata engine. Since passphrase is mandatory in the ase256-encrypted RSA private key, the environment variable `JFS_RSA_PASSPHRASE` is required to specify the passphrase of the private key before creating and mounting file system.
+The option `--encrypt-root-key` is required to specify RSA private key when creating an encrypted file system. The provided private key content will be written to the metadata engine. Since passphrase is mandatory in the ase256-encrypted RSA private key, the environment variable `JFS_RSA_PASSPHRASE` is required to specify the passphrase of the private key before creating and mounting file system.
 
 1. Set passphrase using environment variable
 
@@ -115,7 +115,7 @@ The option `--encrypt-rsa-key` is required to specify RSA private key when creat
 
     ```shell
     juicefs format --storage s3 \
-    --encrypt-rsa-key my-priv-key.pem \
+    --encrypt-root-key my-priv-key.pem \
     ...
     ```
 
@@ -133,11 +133,11 @@ There is no need to specify extra options while mounting an encrypted file syste
 
     ```shell
     juicefs format --storage s3 \
-    --encrypt-rsa-key my-priv-key.pem \
+    --encrypt-root-key my-priv-key.pem \
     ...
     ```
 
-When creating a new volume using `juicefs format`, static encryption can be enabled by specifying the RSA private key with the `-encrypt-rsa-key` parameter, which will be saved on the Metadata service. When the private key is password-protected, the password must be specified using the environment variable `JFS_RSA_PASSPHRASE`.
+When creating a new volume using `juicefs format`, static encryption can be enabled by specifying the RSA private key with the `-encrypt-root-key` parameter, which will be saved on the Metadata service. When the private key is password-protected, the password must be specified using the environment variable `JFS_RSA_PASSPHRASE`.
 
 Usage:
 
@@ -156,7 +156,7 @@ Usage:
 2. Provide the key when formatting
 
    ```shell
-   juicefs format --encrypt-rsa-key my-priv-key.pem META-URL NAME
+   juicefs format --encrypt-root-key my-priv-key.pem META-URL NAME
    ```
 
    :::note

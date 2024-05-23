@@ -79,7 +79,7 @@ test_load_encrypted_meta_backup()
     prepare_test
     [[ ! -f my-priv-key.pem ]] && openssl genrsa -out my-priv-key.pem -aes256 -passout pass:12345678 2048
     export JFS_RSA_PASSPHRASE=12345678
-    ./juicefs format $META_URL myjfs --encrypt-rsa-key my-priv-key.pem
+    ./juicefs format $META_URL myjfs --encrypt-root-key my-priv-key.pem
     ./juicefs mount -d $META_URL /jfs
     python3 .github/scripts/fsrand.py -c 1000 /jfs/fsrand -v -a
     umount /jfs
@@ -89,7 +89,7 @@ test_load_encrypted_meta_backup()
     backup_path=/var/jfs/myjfs/meta/$backup_file
     ls -l $backup_path
 
-    ./juicefs load sqlite3://test2.db $backup_path --encrypt-rsa-key my-priv-key.pem --encrypt-algo aes256gcm-rsa
+    ./juicefs load sqlite3://test2.db $backup_path --encrypt-root-key my-priv-key.pem --encrypt-algo aes256gcm-rsa
     ./juicefs mount -d sqlite3://test2.db /jfs2
     diff -ur /jfs/fsrand /jfs2/fsrand --no-dereference
     umount_jfs /jfs2 sqlite3://test2.db

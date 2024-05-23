@@ -20,6 +20,7 @@
 package cmd
 
 import (
+	"fmt"
 	_ "net/http/pprof"
 	"os"
 	"os/signal"
@@ -62,6 +63,11 @@ func cmdGateway() *cli.Command {
 			Name:  "umask",
 			Value: "022",
 			Usage: "umask for new files and directories in octal",
+		},
+		// 2024-04-08: confilesystem add for cfs
+		&cli.StringFlag{
+			Name:  "encrypt-root-key",
+			Usage: "a path to filesystem encrypt root key (RSA: PEM, AES: Rand Key)",
 		},
 	}
 
@@ -187,6 +193,14 @@ func initForSvc(c *cli.Context, mp string, metaUrl string) (*vfs.Config, *fs.Fil
 		logger.Fatalf("Chroot to %s: %s", metaConf.Subdir, st)
 	}
 	registerer, registry := wrapRegister(mp, format.Name)
+
+	// 2024-04-08: confilesystem add for cfs
+	encryptRootKey := c.String("encrypt-root-key")
+	if encryptRootKey == "" {
+		err = fmt.Errorf("gateway: Get encryptRootKey = [%v] from flag encrypt-root-key", encryptRootKey)
+		logger.Fatalf("initForSvc: %s", err)
+	}
+	format.EncryptKey = loadEncrypt(encryptRootKey)
 
 	blob, err := NewReloadableStorage(format, metaCli, updateFormat(c))
 	if err != nil {

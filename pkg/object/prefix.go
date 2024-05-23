@@ -114,6 +114,7 @@ func (p *withPrefix) Get(key string, off, limit int64) (io.ReadCloser, error) {
 }
 
 func (p *withPrefix) Put(key string, in io.Reader) error {
+	//logger.Infof("withPrefix.Put(): p.prefix = %v, key = %v", p.prefix, key)
 	return p.os.Put(p.prefix+key, in)
 }
 

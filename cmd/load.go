@@ -18,8 +18,6 @@ package cmd
 
 import (
 	"compress/gzip"
-	"crypto/x509"
-	"encoding/pem"
 	"fmt"
 	"io"
 	"os"
@@ -40,13 +38,13 @@ func cmdLoad() *cli.Command {
 		Category: "ADMIN",
 		Flags: []cli.Flag{
 			&cli.StringFlag{
-				Name:  "encrypt-rsa-key",
-				Usage: "a path to RSA private key (PEM)",
+				Name:  "encrypt-root-key",
+				Usage: "a path to filesystem encrypt root key (RSA: PEM, AES: Rand Key)",
 			},
 			&cli.StringFlag{
 				Name:  "encrypt-algo",
-				Usage: "encrypt algorithm (aes256gcm-rsa, chacha20-rsa)",
-				Value: object.AES256GCM_RSA,
+				Usage: "encrypt algorithm (aes256gcm-aesgcm, aes256gcm-rsa, chacha20-rsa)",
+				Value: object.AES256GCM_AESGCM,
 			},
 		},
 		Usage:     "Load metadata from a previously dumped JSON file",
@@ -76,21 +74,10 @@ func load(ctx *cli.Context) error {
 	} else {
 		var ioErr error
 		var fp io.ReadCloser
-		if ctx.String("encrypt-rsa-key") != "" {
+		if ctx.String("encrypt-root-key") != "" {
 			passphrase := os.Getenv("JFS_RSA_PASSPHRASE")
-			encryptKey := loadEncrypt(ctx.String("encrypt-rsa-key"))
-			if passphrase == "" {
-				block, _ := pem.Decode([]byte(encryptKey))
-				// nolint:staticcheck
-				if block != nil && strings.Contains(block.Headers["Proc-Type"], "ENCRYPTED") && x509.IsEncryptedPEMBlock(block) {
-					return fmt.Errorf("passphrase is required to private key, please try again after setting the 'JFS_RSA_PASSPHRASE' environment variable")
-				}
-			}
-			privKey, err := object.ParseRsaPrivateKeyFromPem([]byte(encryptKey), []byte(passphrase))
-			if err != nil {
-				return fmt.Errorf("parse rsa: %s", err)
-			}
-			encryptor, err := object.NewDataEncryptor(object.NewRSAEncryptor(privKey), ctx.String("encrypt-algo"))
+			encryptKey := loadEncrypt(ctx.String("encrypt-root-key"))
+			encryptor, err := object.NewDataEncryptor(([]byte)(encryptKey), passphrase, ctx.String("encrypt-algo"))
 			if err != nil {
 				return err
 			}

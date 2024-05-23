@@ -103,7 +103,7 @@ RSA 私钥的安全极其重要，一旦泄露可能导致数据安全风险。�
 
 #### 第二步 创建加密的文件系统
 
-创建加密的文件系统需要使用 `--encrypt-rsa-key` 选项指定 RSA 私钥，提供的私钥内容将写入元数据引擎。由于 aes256 算法加密的 RSA 私钥强制要求 Passphrase，因此在创建和挂载文件系统之前都需要用环境变量 `JFS_RSA_PASSPHRASE` 来指定私钥的 Passphrase。
+创建加密的文件系统需要使用 `--encrypt-root-key` 选项指定 RSA 私钥，提供的私钥内容将写入元数据引擎。由于 aes256 算法加密的 RSA 私钥强制要求 Passphrase，因此在创建和挂载文件系统之前都需要用环境变量 `JFS_RSA_PASSPHRASE` 来指定私钥的 Passphrase。
 
 1. 用环境变量设置 Passphrase
 
@@ -115,7 +115,7 @@ RSA 私钥的安全极其重要，一旦泄露可能导致数据安全风险。�
 
    ```shell {2}
    juicefs format --storage s3 \
-     --encrypt-rsa-key my-priv-key.pem \
+     --encrypt-root-key my-priv-key.pem \
      ...
    ```
 
