@@ -19,6 +19,7 @@ package fs
 import (
 	"compress/gzip"
 	"context"
+	"fmt"
 	"io"
 	"net/http"
 	"os"
@@ -173,6 +174,7 @@ type WebdavConfig struct {
 	Password     string
 	CertFile     string
 	KeyFile      string
+	CfsEnabled   bool // add by cfs
 }
 
 type indexHandler struct {
@@ -192,6 +194,21 @@ func (h *indexHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 		if userName != h.Username || pwd != h.Password {
 			http.Error(w, "WebDAV: need authorized!", http.StatusUnauthorized)
+			return
+		}
+	} else if h.CfsEnabled { // add by cfs
+		akStr, skStr, ok := r.BasicAuth()
+		fmt.Println("ak:", akStr, "sk:", skStr)
+		if !ok {
+			w.Header().Set("WWW-Authenticate", `Basic realm="Restricted"`)
+			w.WriteHeader(http.StatusUnauthorized)
+			return
+		}
+
+		err := CheckAccessSecret(r.Context(), akStr, skStr)
+		if err != nil {
+			fmt.Println("WebDAV auth error: ", err)
+			http.Error(w, "WebDAV auth error", http.StatusUnauthorized)
 			return
 		}
 	}

@@ -22,6 +22,7 @@ package cmd
 
 import (
 	"os"
+	"strings"
 
 	"github.com/juicedata/juicefs/pkg/fs"
 	"github.com/urfave/cli/v2"
@@ -84,6 +85,7 @@ func webdav(c *cli.Context) error {
 		Password:     os.Getenv("WEBDAV_PASSWORD"),
 		CertFile:     c.String("cert-file"),
 		KeyFile:      c.String("key-file"),
+		CfsEnabled:   strings.ToLower(os.Getenv("CFS_ENABLED")) == "true",
 	})
 	return jfs.Meta().CloseSession()
 }
