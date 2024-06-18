@@ -123,7 +123,11 @@ func exposeMetrics(c *cli.Context, m meta.Meta, registerer prometheus.Registerer
 	m.InitMetrics(registerer)
 	vfs.InitMetrics(registerer)
 	go metric.UpdateMetrics(m, registerer)
-	http.Handle("/metrics", promhttp.HandlerFor(
+	metricsPath := "/metrics"
+	if c.IsSet("metrics-path") {
+		metricsPath = c.String("metrics-path")
+	}
+	http.Handle(metricsPath, promhttp.HandlerFor(
 		registry,
 		promhttp.HandlerOpts{
 			// Opt into OpenMetrics to support exemplars.

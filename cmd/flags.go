@@ -282,6 +282,11 @@ func shareInfoFlags() []cli.Flag {
 			Name:  "no-usage-report",
 			Usage: "do not send usage report",
 		},
+		// 2024-06-18: confilesystem add for cfs
+		&cli.StringFlag{
+			Name:  "metrics-path",
+			Usage: "metrics api path",
+		},
 	})
 }
 
