@@ -69,6 +69,11 @@ func cmdGateway() *cli.Command {
 			Name:  "encrypt-root-key",
 			Usage: "a path to filesystem encrypt root key (RSA: PEM, AES: Rand Key)",
 		},
+		// 2024-06-19: add for cfs
+		&cli.StringFlag{
+			Name:  "certs-dir",
+			Usage: "a dir to certs",
+		},
 	}
 
 	return &cli.Command{
@@ -116,6 +121,9 @@ func gateway(c *cli.Context) error {
 	if c.Bool("no-banner") {
 		args = append(args, "--quiet")
 	}
+	if c.IsSet("certs-dir") {
+		args = append(args, "--certs-dir", c.String("certs-dir"))
+	}
 	app := &mcli.App{
 		Action: gateway2,
 		Flags: []mcli.Flag{
@@ -135,6 +143,11 @@ func gateway(c *cli.Context) error {
 			mcli.BoolFlag{
 				Name:  "quiet",
 				Usage: "disable MinIO startup information",
+			},
+			// 2024-06-19: add for cfs
+			mcli.StringFlag{
+				Name:  "certs-dir",
+				Usage: "a dir to certs",
 			},
 		},
 	}

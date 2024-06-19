@@ -46,6 +46,7 @@ import (
 
 	"github.com/pkg/errors"
 
+	"github.com/confidential-filesystems/filesystem-toolchain/cert"
 	"github.com/juicedata/juicefs/pkg/utils"
 	"github.com/redis/go-redis/v9"
 )
@@ -116,6 +117,14 @@ func newRedisMeta(driver, addr string, conf *Config) (Meta, error) {
 	certFile := query.pop("tls-cert-file")
 	keyFile := query.pop("tls-key-file")
 	caCertFile := query.pop("tls-ca-cert-file")
+	// 2024-06-19: add for cfs
+	serverName := query.pop("tls-server-name")
+	if serverName == "" {
+		serverName = os.Getenv("TLS_SERVER_NAME")
+		if serverName == "" {
+			serverName = cert.DefaultServerCommonName
+		}
+	}
 	u.RawQuery = values.Encode()
 
 	hosts := u.Host
@@ -124,7 +133,7 @@ func newRedisMeta(driver, addr string, conf *Config) (Meta, error) {
 		return nil, fmt.Errorf("redis parse %s: %s", uri, err)
 	}
 	if opt.TLSConfig != nil {
-		opt.TLSConfig.ServerName = "metadata-engine" // use the host of each connection as ServerName
+		opt.TLSConfig.ServerName = serverName // use the host of each connection as ServerName
 		opt.TLSConfig.InsecureSkipVerify = skipVerify != ""
 		if certFile != "" {
 			cert, err := tls.LoadX509KeyPair(certFile, keyFile)
