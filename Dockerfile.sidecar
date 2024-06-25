@@ -1,0 +1,16 @@
+#FROM juicedata/mount:nightly
+#FROM juicedata/mount:ce-v1.1.2
+FROM juicedata-juicefs-sidecar:v1.1.2-filesystem-base
+
+#RUN apt-get update \
+#    && apt-get install -y cryptsetup procps net-tools
+
+COPY ./juicefs /usr/local/bin/juicefs
+COPY ./open_block_device.sh /usr/local/bin/open_block_device.sh
+COPY ./close_block_device.sh /usr/local/bin/close_block_device.sh
+
+# RUN apt-get update && apt-get install -y musl-tools upx-ucl && STATIC=1 make
+# RUN cp -f juicefs /usr/local/bin/juicefs
+# RUN ln -s /usr/local/bin/juicefs /bin/mount.juicefs
+
+RUN /usr/local/bin/juicefs version

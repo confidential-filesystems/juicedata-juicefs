@@ -286,3 +286,8 @@ replace xorm.io/xorm v1.0.7 => gitea.com/davies/xorm v1.0.8-0.20220528043536-552
 replace github.com/huaweicloud/huaweicloud-sdk-go-obs v3.21.12+incompatible => github.com/juicedata/huaweicloud-sdk-go-obs v3.22.12-0.20230228031208-386e87b5c091+incompatible
 
 replace github.com/urfave/cli/v2 v2.19.3 => github.com/juicedata/cli/v2 v2.19.4-0.20230605075551-9c9c5c0dce83
+
+replace (
+	confidentialfilesystems.com/cc/keyprovider => ../filesystem-toolchain/image/keyprovider
+	github.com/confidential-filesystems/filesystem-toolchain v0.0.0-20240620104931-0d55f462bf17 => ../filesystem-toolchain
+)
