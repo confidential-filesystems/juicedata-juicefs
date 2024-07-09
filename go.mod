@@ -16,7 +16,7 @@ require (
 	github.com/billziss-gh/cgofuse v1.5.0
 	github.com/ceph/go-ceph v0.18.0
 	github.com/colinmarc/hdfs/v2 v2.3.0
-	github.com/confidential-filesystems/filesystem-toolchain v0.0.0-20240620104931-0d55f462bf17
+	github.com/confidential-filesystems/filesystem-toolchain v0.0.0-20240708065646-e750cfb8495b
 	github.com/dgraph-io/badger/v3 v3.2103.5
 	github.com/dustin/go-humanize v1.0.1
 	github.com/erikdubbelboer/gspt v0.0.0-20210805194459-ce36a5128377
@@ -271,7 +271,7 @@ require (
 )
 
 //replace github.com/minio/minio v0.0.0-20210206053228-97fe57bba92c => github.com/juicedata/minio v0.0.0-20221113011458-8866d5c9df8c
-replace github.com/minio/minio v0.0.0-20210206053228-97fe57bba92c => github.com/confidential-filesystems/juicedata-minio v0.0.0-20240621102510-5ec118d4d269
+replace github.com/minio/minio v0.0.0-20210206053228-97fe57bba92c => github.com/confidential-filesystems/juicedata-minio v0.0.0-20240709053507-7e9a0cc30b2a
 
 replace github.com/hanwen/go-fuse/v2 v2.1.1-0.20210611132105-24a1dfe6b4f8 => github.com/juicedata/go-fuse/v2 v2.1.1-0.20230726081302-124dbfa991d7
 
@@ -286,8 +286,3 @@ replace xorm.io/xorm v1.0.7 => gitea.com/davies/xorm v1.0.8-0.20220528043536-552
 replace github.com/huaweicloud/huaweicloud-sdk-go-obs v3.21.12+incompatible => github.com/juicedata/huaweicloud-sdk-go-obs v3.22.12-0.20230228031208-386e87b5c091+incompatible
 
 replace github.com/urfave/cli/v2 v2.19.3 => github.com/juicedata/cli/v2 v2.19.4-0.20230605075551-9c9c5c0dce83
-
-replace (
-	confidentialfilesystems.com/cc/keyprovider => ../filesystem-toolchain/image/keyprovider
-	github.com/confidential-filesystems/filesystem-toolchain v0.0.0-20240620104931-0d55f462bf17 => ../filesystem-toolchain
-)

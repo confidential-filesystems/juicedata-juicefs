@@ -237,10 +237,10 @@ github.com/cncf/xds/go v0.0.0-20231128003011-0fa0005c9caa/go.mod h1:x/1Gn8zydmfq
 github.com/cockroachdb/datadriven v0.0.0-20190809214429-80d97fb3cbaa/go.mod h1:zn76sxSg3SzpJ0PPJaLDCu+Bu0Lg3sKTORVIj19EIF8=
 github.com/colinmarc/hdfs/v2 v2.3.0 h1:tMxOjXn6+7iPUlxAyup9Ha2hnmLe3Sv5DM2qqbSQ2VY=
 github.com/colinmarc/hdfs/v2 v2.3.0/go.mod h1:nsyY1uyQOomU34KVQk9Qb/lDJobN1MQ/9WS6IqcVZno=
-github.com/confidential-filesystems/filesystem-toolchain v0.0.0-20240620104931-0d55f462bf17 h1:dLKy3fFn3AJQ4gZMy+76kDLzhrtpBRUcIAHdgXxzWsQ=
-github.com/confidential-filesystems/filesystem-toolchain v0.0.0-20240620104931-0d55f462bf17/go.mod h1:dwZxdB/ZWkd+oNST5hCMnEcRiprghKx5n97B3tGvRJM=
-github.com/confidential-filesystems/juicedata-minio v0.0.0-20240621102510-5ec118d4d269 h1:3RQSAmTfr1zGnzQMySJOGTvTYvDgL6K9IPR7781yng8=
-github.com/confidential-filesystems/juicedata-minio v0.0.0-20240621102510-5ec118d4d269/go.mod h1:cpux0155mGehDkFUQdXIOAuiSBuyMkWcS7Bwb8pUuyE=
+github.com/confidential-filesystems/filesystem-toolchain v0.0.0-20240708065646-e750cfb8495b h1:C/uh+NTcE79mO767xKb6pIhNTYk0JEjVYFqFdb8k61o=
+github.com/confidential-filesystems/filesystem-toolchain v0.0.0-20240708065646-e750cfb8495b/go.mod h1:dwZxdB/ZWkd+oNST5hCMnEcRiprghKx5n97B3tGvRJM=
+github.com/confidential-filesystems/juicedata-minio v0.0.0-20240709053507-7e9a0cc30b2a h1:uwnNTrzlgp33DaJOZF3WqPztVhVALqOpNnId3v8OtME=
+github.com/confidential-filesystems/juicedata-minio v0.0.0-20240709053507-7e9a0cc30b2a/go.mod h1:oRn3yZVhL14Q1eZSEqQ+30akWRdAxRv+Bwh0YzF3msU=
 github.com/consensys/bavard v0.1.8-0.20210406032232-f3452dc9b572/go.mod h1:Bpd0/3mZuaj6Sj+PqrmIquiOKy397AKGThQPaGzNXAQ=
 github.com/consensys/gnark-crypto v0.4.1-0.20210426202927-39ac3d4b3f1f/go.mod h1:815PAHg3wvysy0SyIqanF8gZ0Y1wjk/hrDHD/iT88+Q=
 github.com/coredns/coredns v1.6.6 h1:GFJXHHBiN2YGp4vS1tltNR0AhI1+TXhb79WT1VAS47I=
