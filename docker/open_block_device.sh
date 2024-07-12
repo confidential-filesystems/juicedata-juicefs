@@ -40,11 +40,13 @@ fi
 
 # resize if needed
 if [ $firstTime -eq 0 ]; then
+  set +e
   echo "resize if needed"
   cryptsetup resize /dev/mapper/"$MAPPER_NAME"
-  timeout 60s e2fsck -f -y /dev/mapper/"$MAPPER_NAME"
+  timeout 600s e2fsck -f -y /dev/mapper/"$MAPPER_NAME"
   resize2fs /dev/mapper/"$MAPPER_NAME"
   echo "resize done"
+  set -e
 fi
 
 # check mount point
