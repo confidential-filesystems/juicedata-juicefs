@@ -41,11 +41,38 @@ fi
 # resize if needed
 if [ $firstTime -eq 0 ]; then
   set +e
-  echo "resize if needed"
-  cryptsetup resize /dev/mapper/"$MAPPER_NAME"
-  timeout 600s e2fsck -f -y /dev/mapper/"$MAPPER_NAME"
-  resize2fs /dev/mapper/"$MAPPER_NAME"
-  echo "resize done"
+  echo "Resize if needed"
+  MAPPER=/dev/mapper/"$MAPPER_NAME"
+  DEVICE_SIZE=$(blockdev --getsize64 "$MAPPER")
+  if [ $? -ne 0 ]; then
+      echo "Error: Failed to get device size for $MAPPER"
+  else
+      echo "Device size (bytes): $DEVICE_SIZE"
+      FS_INFO=$(dumpe2fs -h "$MAPPER" 2>/dev/null)
+      if [ $? -ne 0 ]; then
+          echo "Error: Failed to get filesystem info for $MAPPER"
+      else
+          BLOCK_COUNT=$(echo "$FS_INFO" | grep 'Block count:' | awk '{print $3}')
+          BLOCK_SIZE=$(echo "$FS_INFO" | grep 'Block size:' | awk '{print $3}')
+          FILESYSTEM_SIZE=$((BLOCK_COUNT * BLOCK_SIZE))
+          echo "Filesystem size (bytes): $FILESYSTEM_SIZE"
+          if [ "$FILESYSTEM_SIZE" -lt "$DEVICE_SIZE" ]; then
+              echo "Filesystem is smaller than the device. Resizing..."
+              cryptsetup resize "$MAPPER"
+              echo "cryptsetup resize result $?"
+              timeout 600s e2fsck -f -y "$MAPPER"
+              echo "e2fsck result $?"
+              resize2fs "$MAPPER"
+              if [ $? -eq 0 ]; then
+                  echo "Resize successful."
+               else
+                  echo "Resize failed."
+               fi
+          else
+             echo "No need to resize. Filesystem is already equal or larger than the device."
+          fi
+      fi
+  fi
   set -e
 fi
 
