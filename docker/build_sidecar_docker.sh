@@ -1,8 +1,8 @@
 #!/bin/bash
 
 set -e
-SERVICE_NAME=cfs-fuse
-VERSION=v0.0.1-d1
+SERVICE_NAME=cfs-sidecar
+VERSION=v0.1.0
 HUB=hub.confidentialfilesystems.com:4443
 
 git pull
