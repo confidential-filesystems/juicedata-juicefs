@@ -60,10 +60,10 @@ if [ ${DO_FORMAT} -eq 0 ]; then
     cryptsetup resize "${MAPPER_DEVICE}"
     echo "INFO: LUKS resized"
 
-    set -e
+    set +e
     time 600 e2fsck -f -y "${MAPPER_DEVICE}"
     echo "INFO: filesystem checked"
-    set +e
+    set -e
 
     resize2fs "$MAPPER_DEVICE"
     echo "INFO: filesystem resized"
