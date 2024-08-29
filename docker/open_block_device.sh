@@ -71,11 +71,9 @@ if [ ${DO_FORMAT} -eq 0 ]; then
 fi
 
 # check mount point
-if [ ! -d "$MOUNT_POINT" ]; then
-  echo "Mount point '$MOUNT_POINT' does not exist. Creating it now..."
+if [ ! -d "${MOUNT_POINT}" ]; then
+  echo "INFO: mount point ${MOUNT_POINT} does not exist, creating it now"
   mkdir -p "$MOUNT_POINT"
-else
-  echo "Mount point '$MOUNT_POINT' already exists."
 fi
 
 # mount
