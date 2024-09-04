@@ -2,7 +2,7 @@
 
 set -e
 SERVICE_NAME=cfs-sidecar
-VERSION=v0.1.0
+VERSION=v0.1.1
 HUB=hub.confidentialfilesystems.com:30443
 
 git pull
