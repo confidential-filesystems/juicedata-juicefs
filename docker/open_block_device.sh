@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -eux
+set -eu
 set -o pipefail
 
 if [ ! $# -eq 4 ]; then
