@@ -657,7 +657,9 @@ func mount(c *cli.Context) error {
 		if c.IsSet("log") {
 			logger.Warnf("--log flag is ignored in foreground mode, the log output will be Stderr")
 		}
-		go checkMountpoint(vfsConf.Format.Name, mp, c.String("log"), false)
+		if !c.Bool("no-check-mp") {
+			go checkMountpoint(vfsConf.Format.Name, mp, c.String("log"), false)
+		}
 	}
 
 	removePassword(addr)

@@ -67,7 +67,9 @@ func makeDaemon(c *cli.Context, name, mp string, m meta.Meta) error {
 		if stage != 0 {
 			return nil
 		}
-		checkMountpoint(name, mp, logfile, true)
+		if !c.Bool("no-check-mp") {
+			checkMountpoint(name, mp, logfile, true)
+		}
 		return nil
 	}
 
@@ -164,6 +166,11 @@ func mount_flags() []cli.Flag {
 		&cli.BoolFlag{
 			Name:  "force",
 			Usage: "force to mount even if the mount point is already mounted by the same filesystem",
+		},
+		// 2024-09-09: confilesystem add for cfs
+		&cli.BoolFlag{
+			Name:  "no-check-mp",
+			Usage: "do not check the mount point",
 		},
 	}
 	if runtime.GOOS == "linux" {
