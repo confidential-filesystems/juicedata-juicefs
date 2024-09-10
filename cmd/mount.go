@@ -44,7 +44,6 @@ import (
 	"github.com/juicedata/juicefs/pkg/chunk"
 	"github.com/juicedata/juicefs/pkg/meta"
 	"github.com/juicedata/juicefs/pkg/metric"
-	"github.com/juicedata/juicefs/pkg/usage"
 	"github.com/juicedata/juicefs/pkg/utils"
 	"github.com/juicedata/juicefs/pkg/version"
 	"github.com/juicedata/juicefs/pkg/vfs"
@@ -446,9 +445,9 @@ func initBackgroundTasks(c *cli.Context, vfsConf *vfs.Config, metaConf *meta.Con
 	if !metaConf.ReadOnly && !metaConf.NoBGJob && vfsConf.BackupMeta > 0 {
 		go vfs.Backup(m, blob, vfsConf.BackupMeta)
 	}
-	if !c.Bool("no-usage-report") {
-		go usage.ReportUsage(m, version.Version())
-	}
+	//if !c.Bool("no-usage-report") {
+	//	go usage.ReportUsage(m, version.Version())
+	//}
 }
 
 type storageHolder struct {
