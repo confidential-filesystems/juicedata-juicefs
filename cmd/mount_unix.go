@@ -172,6 +172,11 @@ func mount_flags() []cli.Flag {
 			Name:  "no-check-mp",
 			Usage: "do not check the mount point",
 		},
+		// 2024-09-1p: confilesystem add for cfs
+		&cli.BoolFlag{
+			Name:  "no-background-tasks",
+			Usage: "do not init metrics/backup/report task",
+		},
 	}
 	if runtime.GOOS == "linux" {
 		selfFlags = append(selfFlags, &cli.BoolFlag{
