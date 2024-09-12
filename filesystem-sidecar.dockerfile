@@ -1,6 +1,6 @@
 FROM golang:1.21.7 AS builder
 
-ARG WEBDAV_TAG
+ARG WEBDAV_TAG=main
 
 RUN mkdir -p -m 0600 ~/.ssh && \
     ssh-keyscan -H github.com >> ~/.ssh/known_hosts
