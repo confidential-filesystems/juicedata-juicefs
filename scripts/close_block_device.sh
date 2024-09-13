@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -eux
+set -x
 set -o pipefail
 
 if [ ! $# -eq 2 ]; then
