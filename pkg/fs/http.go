@@ -174,7 +174,7 @@ type WebdavConfig struct {
 	Password     string
 	CertFile     string
 	KeyFile      string
-	CfsEnabled   bool // add by cfs
+	CfsDisabled  bool // add by cfs
 }
 
 type indexHandler struct {
@@ -184,21 +184,9 @@ type indexHandler struct {
 
 func (h *indexHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
-	//http://www.webdav.org/specs/rfc4918.html#n-guidance-for-clients-desiring-to-authenticate
-	if h.Username != "" && h.Password != "" {
-		userName, pwd, ok := r.BasicAuth()
-		if !ok {
-			w.Header().Set("WWW-Authenticate", `Basic realm="Restricted"`)
-			w.WriteHeader(http.StatusUnauthorized)
-			return
-		}
-		if userName != h.Username || pwd != h.Password {
-			http.Error(w, "WebDAV: need authorized!", http.StatusUnauthorized)
-			return
-		}
-	} else if h.CfsEnabled { // add by cfs
+	if !h.CfsDisabled { // add by cfs
 		akStr, skStr, ok := r.BasicAuth()
-		fmt.Println("ak:", akStr, "sk:", skStr)
+		fmt.Println("ak:", akStr)
 		if !ok {
 			w.Header().Set("WWW-Authenticate", `Basic realm="Restricted"`)
 			w.WriteHeader(http.StatusUnauthorized)
@@ -209,6 +197,18 @@ func (h *indexHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			fmt.Println("WebDAV auth error: ", err)
 			http.Error(w, "WebDAV auth error", http.StatusUnauthorized)
+			return
+		}
+	} else if h.Username != "" && h.Password != "" {
+		//http://www.webdav.org/specs/rfc4918.html#n-guidance-for-clients-desiring-to-authenticate
+		userName, pwd, ok := r.BasicAuth()
+		if !ok {
+			w.Header().Set("WWW-Authenticate", `Basic realm="Restricted"`)
+			w.WriteHeader(http.StatusUnauthorized)
+			return
+		}
+		if userName != h.Username || pwd != h.Password {
+			http.Error(w, "WebDAV: need authorized!", http.StatusUnauthorized)
 			return
 		}
 	}
