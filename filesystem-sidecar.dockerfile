@@ -32,7 +32,7 @@ FROM confidentialfilesystems/sidecar:v1.0.0-amd64
 COPY --from=builder /usr/src/juicedata-juicefs/juicefs /usr/local/bin/juicefs
 COPY --from=builder /usr/src/filesystem-webdav/filesystem-webdav  /usr/local/bin/filesystem-webdav
 COPY --from=builder /usr/src/filesystem-webdav/examples/config-example.yaml /etc/webdav/config.yaml
-COPY scripts/open_block_device.sh /usr/local/bin/open_block_device.sh
-COPY scripts/close_block_device.sh /usr/local/bin/close_block_device.sh
+COPY scripts /usr/local/bin/
+
 RUN ln -s /usr/local/bin/juicefs /bin/mount.juicefs
 RUN /usr/local/bin/juicefs version
